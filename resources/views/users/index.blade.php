@@ -4,12 +4,73 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
             <span class="eyebrow">User Management</span>
-            <h1 class="h2 mt-2 mb-1">Approved users</h1>
-            <p class="text-secondary mb-0">Filter users by election or show all users sorted alphabetically by election.</p>
+            <h1 class="h2 mt-2 mb-1">Voter management</h1>
+            <p class="text-secondary mb-0">Review pending registrations, then manage approved voters by election.</p>
         </div>
     </div>
 
     <div class="panel-card p-4 mb-4">
+        <span class="eyebrow">Pending Registrations</span>
+        <h2 class="h4 mt-2 mb-3">Pending registrations</h2>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Current Image</th>
+                        <th>Name</th>
+                        <th>Contact</th>
+                        <th>Election</th>
+                        <th>Message / Action</th>
+                        <th class="text-end">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($pendingUsers as $user)
+                        <tr>
+                            <td>
+                                @if($user->image_path)
+                                    <img src="{{ asset('storage/'.$user->image_path) }}" alt="{{ $user->name }}" class="table-avatar">
+                                @else
+                                    <div class="table-avatar table-avatar-placeholder">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                                @endif
+                            </td>
+                            <td>{{ $user->name }}</td>
+                            <td>{{ $user->contact_number }}</td>
+                            <td>{{ $user->election?->name }}{{ $user->election?->place?->name ? ' - '.$user->election->place->name : '' }}</td>
+                            <td>
+                                <form action="{{ route('pending-users.update', $user) }}" method="POST" class="row g-2">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="col-12">
+                                        <textarea name="rejection_message" rows="2" class="form-control" placeholder="You can try once again or add a custom correction note"></textarea>
+                                    </div>
+                                    <div class="col-12 d-flex gap-2">
+                                        <button name="action" value="accept" class="btn btn-sm btn-success">Accept</button>
+                                        <button name="action" value="reject" class="btn btn-sm btn-warning">Reject</button>
+                                    </div>
+                                </form>
+                            </td>
+                            <td class="text-end">
+                                <form action="{{ route('pending-users.destroy', $user) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this pending user?')">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center text-secondary py-4">No pending user registrations right now.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel-card p-4 mb-4">
+        <span class="eyebrow">Approved Voters</span>
+        <h2 class="h4 mt-2 mb-3">Approved users</h2>
         <form method="GET" class="row g-3 align-items-end">
             <div class="col-md-6">
                 <label class="form-label">Election Filter</label>

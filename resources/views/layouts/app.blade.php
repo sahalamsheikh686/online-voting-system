@@ -53,14 +53,12 @@
                             @include('partials.navbar.admin-candidates')
                             @include('partials.navbar.admin-users')
                             @include('partials.navbar.admin-admins')
-                            @include('partials.navbar.admin-pending')
                             @include('partials.navbar.admin-host-requests')
                             @include('partials.navbar.admin-reports')
                         @elseif(auth()->user()->isHost())
                             @include('partials.navbar.admin-dashboard')
                             @include('partials.navbar.admin-add-election-card')
                             @include('partials.navbar.admin-candidates')
-                            @include('partials.navbar.admin-pending')
                             @include('partials.navbar.admin-users')
                             @include('partials.navbar.admin-reports')
                         @else
@@ -93,7 +91,7 @@
                     @include('partials.alerts')
                     @yield('content')
                 </div>
-                <footer class="app-footer mt-4">
+                <footer class="app-footer">
                     <div class="app-footer-inner">Your Vote, Your Right — सुरक्षित अनलाइन मतदान प्रणाली।</div>
                 </footer>
             </main>

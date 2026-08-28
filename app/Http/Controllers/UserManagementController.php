@@ -15,6 +15,12 @@ class UserManagementController extends Controller
         $electionId = request('election_id');
         $showAll = request()->boolean('show_all');
 
+        $elections = Election::query()
+            ->with('place')
+            ->when(auth()->user()->isHost(), fn ($query) => $query->where('host_id', auth()->id()))
+            ->orderBy('name')
+            ->get();
+
         $users = User::query()
             ->with('election.place')
             ->where('role', 'user')
@@ -33,13 +39,19 @@ class UserManagementController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $pendingUsers = User::query()
+            ->with('election.place')
+            ->where('role', 'user')
+            ->where('status', 'pending')
+            ->when(auth()->user()->isHost(), fn ($query) => $query->whereIn('election_id', $elections->pluck('id')))
+            ->when($electionId, fn ($query) => $query->where('election_id', $electionId))
+            ->orderBy('name')
+            ->get();
+
         return view('users.index', [
             'users' => $users,
-            'elections' => Election::query()
-                ->with('place')
-                ->when(auth()->user()->isHost(), fn ($query) => $query->where('host_id', auth()->id()))
-                ->orderBy('name')
-                ->get(),
+            'pendingUsers' => $pendingUsers,
+            'elections' => $elections,
             'selectedElection' => $electionId,
             'showAll' => $showAll,
         ]);

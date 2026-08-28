@@ -11,15 +11,26 @@ use Illuminate\View\View;
 
 class HostRequestController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $nameSearch = trim((string) $request->query('name'));
+
         return view('host-requests.index', [
-            'hosts' => User::query()
+            'pendingRequests' => User::query()
                 ->with('hostProfile')
                 ->where('role', 'host')
-                ->orderByRaw("case status when 'pending' then 0 when 'rejected' then 1 when 'approved' then 2 else 3 end")
+                ->whereIn('status', ['pending', 'rejected'])
+                ->orderByRaw("case status when 'pending' then 0 when 'rejected' then 1 else 2 end")
                 ->orderBy('name')
                 ->get(),
+            'approvedHosts' => User::query()
+                ->with('hostProfile')
+                ->where('role', 'host')
+                ->where('status', 'approved')
+                ->when($nameSearch, fn ($query) => $query->where('name', 'like', "%{$nameSearch}%"))
+                ->orderBy('name')
+                ->get(),
+            'nameSearch' => $nameSearch,
         ]);
     }
 

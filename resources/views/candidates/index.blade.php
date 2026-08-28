@@ -7,7 +7,6 @@
             <h1 class="h2 mt-2 mb-1">Election candidates</h1>
             <p class="text-secondary mb-0">Filter by election, add new candidates, and manage existing records.</p>
         </div>
-        <a href="{{ route('candidates.create') }}" class="btn btn-primary rounded-pill px-4">Add Candidate</a>
     </div>
 
     <div class="row g-4 mb-4">
@@ -31,24 +30,9 @@
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="panel-card p-4">
-                <h2 class="h5 mb-3">Add Election</h2>
-                <form action="{{ route('elections.store') }}" method="POST" class="row g-3">
-                    @csrf
-                    <div class="col-12">
-                        <input type="text" name="name" class="form-control" placeholder="Election name">
-                    </div>
-                    <div class="col-12">
-                        <input type="text" name="election_title" class="form-control" placeholder="Election title">
-                    </div>
-                    <div class="col-12">
-                        <input type="text" name="place_name" class="form-control" placeholder="Election place" title="Election place must contain text. Numbers only are not valid.">
-                    </div>
-                    <div class="col-12 d-flex gap-2">
-                        <button class="btn btn-primary flex-grow-1">Add Election</button>
-                        <button type="reset" class="btn btn-outline-secondary flex-grow-1">Cancel</button>
-                    </div>
-                </form>
+            <div class="panel-card p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+                <h2 class="h5 mb-3">Add a new candidate</h2>
+                <a href="{{ route('candidates.create') }}" class="btn btn-primary rounded-pill px-4">Add Candidate</a>
             </div>
         </div>
     </div>

@@ -64,7 +64,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 
-        Route::get('/pending-users', [PendingUserController::class, 'index'])->name('pending-users.index');
         Route::put('/pending-users/{user}', [PendingUserController::class, 'update'])->name('pending-users.update');
         Route::delete('/pending-users/{user}', [PendingUserController::class, 'destroy'])->name('pending-users.destroy');
 
