@@ -7,6 +7,31 @@ yarn-error.log
 bootstrap/compiled.php
 app/storage/
 
+# Laravel runtime cache, logs, and generated files
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+/storage/app/*
+!/storage/app/private
+!/storage/app/public
+/storage/app/private/*
+!/storage/app/private/.gitignore
+/storage/app/public/*
+!/storage/app/public/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+database/*.sqlite
+database/*.sqlite-journal
+
 # Laravel 5 & Lumen specific
 public/storage
 public/hot

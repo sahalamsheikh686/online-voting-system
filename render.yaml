@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: online-voting-system
+    runtime: docker
+    healthCheckPath: /up
+    envVars:
+      - key: APP_NAME
+        value: Online Voting System
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY_BASE64
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: online-voting-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+databases:
+  - name: online-voting-db
+    databaseName: online_voting_system
+    user: online_voting_system

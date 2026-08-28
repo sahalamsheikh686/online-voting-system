@@ -1,0 +1,793 @@
+ONLINE VOTING SYSTEM - ALGORITHMS, LOGIC, SECURITY, AND FILE REFERENCES
+========================================================================
+
+Project Type:
+Laravel based Online Voting System.
+
+Main Purpose:
+This project manages voter registration, admin approval, election-wise candidate
+management, secure login, election start/pause/resume/end flow, vote casting,
+winner calculation, reports, and election archive/restore.
+
+Important Note:
+This project does not use advanced cryptographic voting algorithms like
+blockchain, RSA vote encryption, homomorphic encryption, biometric verification,
+or OTP. It uses practical application-level algorithms and Laravel security
+features such as hashing, middleware, CSRF protection, validation, transactions,
+database constraints, and role based access control.
+
+
+1. AUTHENTICATION ALGORITHM
+===========================
+
+Used Logic:
+- User logs in using contact number and password.
+- Laravel Auth::attempt() checks the password.
+- Session is regenerated after successful login to reduce session fixation risk.
+- Session is invalidated and CSRF token regenerated during logout.
+
+File References:
+- app/Http/Controllers/AuthController.php
+  - login()
+  - register()
+  - logout()
+- app/Http/Requests/LoginRequest.php
+- app/Models/User.php
+
+Important Code/Concepts:
+- Auth::attempt()
+- Hash::make()
+- session()->regenerate()
+- session()->invalidate()
+- session()->regenerateToken()
+
+
+2. PASSWORD HASHING LOGIC
+=========================
+
+Used Logic:
+- Password is stored in hashed format.
+- Laravel model casting automatically hashes password.
+- Sensitive fields are hidden from array/json output.
+
+File References:
+- app/Models/User.php
+
+Important Code/Concepts:
+- 'password' => 'hashed'
+- protected $hidden = ['password', 'remember_token']
+
+
+3. ROLE BASED ACCESS CONTROL ALGORITHM
+======================================
+
+Used Logic:
+- System has two main roles: admin and user/voter.
+- Admin can access dashboard, candidates, users, admins, pending users, reports.
+- Approved voter can access voting portal.
+- Pending or rejected voter cannot access voting portal.
+- Non-admin users are logged out if they try to access admin area.
+
+File References:
+- routes/web.php
+- app/Http/Middleware/EnsureUserIsAdmin.php
+- app/Http/Middleware/EnsureUserIsApproved.php
+- bootstrap/app.php
+- app/Models/User.php
+
+Important Code/Concepts:
+- Route::middleware('auth')
+- Route::middleware('admin')
+- Route::middleware('approved')
+- isAdmin()
+- isApproved()
+
+
+5. USER REGISTRATION VALIDATION LOGIC
+=====================================
+
+Used Logic:
+- Name must contain only alphabets and spaces.
+- Contact number must be exactly 10 digits.
+- Contact number must be unique.
+- Password must be confirmed and minimum 8 characters.
+- Pattern lock must be 4 to 9 digits.
+- Date of birth must prove user is 18 or above.
+- Election must exist.
+- Citizenship number must be unique.
+- Voter ID number must be unique and numeric.
+- User image must be jpg, jpeg, or png and maximum 2 MB.
+- Newly registered user status is pending until admin approval.
+
+File References:
+- app/Http/Requests/RegisterUserRequest.php
+- app/Http/Controllers/AuthController.php
+- resources/views/auth/register.blade.php
+- database/migrations/0001_01_01_000000_create_users_table.php
+- database/migrations/2026_05_22_000001_add_unique_index_to_users_citizenship_number.php
+
+Important Code/Concepts:
+- Password::min(8)
+- before_or_equal: now()->subYears(18)
+- unique:users,contact_number
+- unique:users,citizenship_number
+- unique:users,voter_id_number
+- image mimes validation
+
+
+6. ADMIN APPROVAL / REJECTION LOGIC
+===================================
+
+Used Logic:
+- Registered voters are first stored as pending.
+- Admin can accept or reject pending voters.
+- Accepted user status becomes approved.
+- Rejected user status becomes rejected.
+- Rejection message can be stored.
+- Only approved users can vote.
+
+File References:
+- app/Http/Controllers/PendingUserController.php
+- app/Http/Requests/PendingUserActionRequest.php
+- resources/views/pending-users/index.blade.php
+- app/Http/Middleware/EnsureUserIsApproved.php
+
+Important Code/Concepts:
+- action = accept/reject
+- Rule::in(['accept', 'reject'])
+- required_if:action,reject
+- status = pending/approved/rejected
+- approved_at
+- rejection_message
+
+
+7. ELECTION-WISE BALLOT FILTERING LOGIC
+=======================================
+
+Used Logic:
+- Each user belongs to one election.
+- Each candidate belongs to one election.
+- Voter can only see candidates from their own election.
+- During vote submission, backend verifies selected candidate election matches
+  the voter's election.
+- If election does not match, request is rejected with 403.
+
+File References:
+- app/Http/Controllers/VoteController.php
+- app/Models/User.php
+- app/Models/Candidate.php
+- app/Models/Election.php
+- database/migrations/2026_05_11_115752_create_candidates_table.php
+- database/migrations/2026_05_11_115754_create_votes_table.php
+
+Important Code/Concepts:
+- $user->election_id
+- $candidate->election_id
+- abort(403)
+- election()->with(['candidates'])
+
+
+8. VOTING ALGORITHM
+===================
+
+Used Logic:
+- Voter must select exactly one President candidate.
+- Voter must select exactly one Vice President candidate.
+- President candidate and Vice President candidate must be different.
+- Selected candidates must exist in candidates table.
+- Election must be active.
+- Election must not be ended.
+- Election must not be paused.
+- Voter must not have already voted.
+- Candidate election must match voter election.
+- Candidate position must match selected position.
+- Votes are inserted inside database transaction.
+- After vote insert, user has_voted_at timestamp is updated.
+
+File References:
+- app/Http/Controllers/VoteController.php
+- app/Models/Vote.php
+- app/Models/User.php
+- app/Models/Candidate.php
+- app/Models/ElectionSetting.php
+- resources/views/voting/index.blade.php
+
+Important Code/Concepts:
+- request()->validate()
+- different:vice_president_candidate_id
+- different:president_candidate_id
+- exists:candidates,id
+- hasEnded()
+- is_active
+- isPaused()
+- hasVoted()
+- DB::transaction()
+- Vote::create()
+- has_voted_at = now()
+
+
+9. ONE PERSON, ONE BALLOT LOGIC
+===============================
+
+Used Logic:
+- User can vote only once in one election cycle.
+- User model checks has_voted_at timestamp.
+- If has_voted_at is not null, voting is blocked.
+- Database also has unique constraint on user_id and position.
+- This prevents duplicate vote for same user and same position.
+
+File References:
+- app/Http/Controllers/VoteController.php
+- app/Models/User.php
+- database/migrations/2026_05_11_115754_create_votes_table.php
+- database/migrations/2026_05_12_090000_update_votes_for_multi_position_ballot.php
+
+Important Code/Concepts:
+- hasVoted()
+- has_voted_at
+- unique(['user_id', 'position'])
+
+
+10. ELECTION STATUS SYNCHRONIZATION ALGORITHM
+=============================================
+
+Used Logic:
+- Election status is synchronized when dashboard or vote page loads.
+- If election has not started, system ensures it is not active.
+- If election is active and current time passes ends_at, election is marked ended.
+- When ended, is_active becomes false.
+- paused_at and remaining_seconds are cleared when election ends.
+
+File References:
+- app/Http/Controllers/VoteController.php
+- app/Http/Controllers/DashboardController.php
+- app/Models/ElectionSetting.php
+
+Important Code/Concepts:
+- syncElectionStatus()
+- hasEnded()
+- started_at
+- ends_at
+- ended_at
+- is_active
+- paused_at
+- remaining_seconds
+
+
+11. ELECTION START / PAUSE / RESUME LOGIC
+=========================================
+
+Used Logic:
+- Admin starts election by setting election title and end time.
+- End time must be future date/time.
+- Pause stores remaining seconds and marks election inactive.
+- Resume creates a new end time using remaining seconds.
+- If election is restarted after ending with old votes, old data is archived and
+  vote data is reset.
+
+File References:
+- app/Http/Controllers/DashboardController.php
+- app/Models/ElectionSetting.php
+- resources/views/dashboard/index.blade.php
+
+Important Code/Concepts:
+- startElection()
+- pauseElection()
+- resumeElection()
+- diffInSeconds()
+- now()->addSeconds()
+- after:now
+- DB::transaction()
+
+
+12. WINNER CALCULATION ALGORITHM
+================================
+
+Used Logic:
+- Candidates are grouped by position.
+- Vote count is calculated for each candidate.
+- Candidate with highest vote becomes winner.
+- If two or more candidates have same top vote, result is draw/tie.
+- If no candidate has vote, winner is null.
+- For tie display, tied candidates are sorted by name.
+
+File References:
+- app/Http/Controllers/VoteController.php
+- app/Http/Controllers/DashboardController.php
+- app/Http/Controllers/Reports/ReportController.php
+- resources/views/voting/index.blade.php
+- resources/views/dashboard/index.blade.php
+
+Important Code/Concepts:
+- resolveWinner()
+- buildPositionResult()
+- buildPositionResults()
+- groupBy('position')
+- votes->count()
+- sortByDesc()
+- tied_candidates
+- is_tie
+- tie_votes
+
+
+13. DASHBOARD CHART AND LIVE RESULT LOGIC
+=========================================
+
+Used Logic:
+- Dashboard loads elections with candidates and votes.
+- Vote totals are calculated election-wise.
+- Vote totals are calculated position-wise.
+- Chart.js displays vote data as bar charts.
+- Dashboard shows running elections, total votes, president votes, vice president votes.
+- Dashboard shows leader while election is running.
+- Dashboard shows winner/draw after election ends.
+
+Backend File References:
+- app/Http/Controllers/DashboardController.php
+
+Frontend File References:
+- resources/views/dashboard/index.blade.php
+- resources/views/layouts/app.blade.php
+
+Important Code/Concepts:
+- total_votes
+- presidentVotes
+- vicePresidentVotes
+- visibleCharts
+- winner_summary
+- new Chart()
+- bar chart
+- positionChart.labels
+- positionChart.votes
+
+
+14. COUNTDOWN TIMER ALGORITHM
+=============================
+
+Used Logic:
+- Frontend receives election end time.
+- JavaScript calculates difference between end time and current browser time.
+- Timer displays days/hours/minutes/seconds.
+- If election is paused, remaining seconds are displayed.
+- If countdown reaches zero, text changes to Election ended.
+- Page reloads automatically after countdown end to update status/result.
+
+File References:
+- resources/views/voting/index.blade.php
+- resources/views/dashboard/index.blade.php
+
+Important Code/Concepts:
+- data-election-countdown
+- data-target
+- data-paused-seconds
+- formatCountdown()
+- setInterval()
+- Date.now()
+- window.location.reload()
+
+
+15. CANDIDATE MANAGEMENT LOGIC
+==============================
+
+Used Logic:
+- Admin can add, update, delete candidates.
+- Candidate name must contain alphabets and spaces.
+- Candidate party must be selected from predefined party list.
+- Candidate age must be between 18 and 120.
+- Candidate email must be unique.
+- Candidate image must be jpg/jpeg/png.
+- Candidate vision file can be image/pdf/doc/docx.
+- Deleted candidate is saved in deleted_candidates history before deletion.
+
+File References:
+- app/Http/Controllers/CandidateController.php
+- app/Http/Requests/CandidateRequest.php
+- app/Models/Candidate.php
+- app/Models/DeletedCandidate.php
+- resources/views/candidates/index.blade.php
+- resources/views/candidates/form.blade.php
+
+Important Code/Concepts:
+- Candidate::PARTIES
+- Rule::in(Candidate::PARTIES)
+- Rule::unique('candidates', 'email')
+- Storage::disk('public')->delete()
+- DeletedCandidate::create()
+
+
+16. USER MANAGEMENT LOGIC
+=========================
+
+Used Logic:
+- Admin can view approved voters.
+- Admin can filter voters by election.
+- Admin can update voter name, contact number, and election.
+- Contact number uniqueness is maintained during update.
+- Admin can delete users.
+
+File References:
+- app/Http/Controllers/UserManagementController.php
+- app/Http/Requests/UserUpdateRequest.php
+- resources/views/users/index.blade.php
+
+Important Code/Concepts:
+- where('role', 'user')
+- where('status', 'approved')
+- when($electionId)
+- Rule::unique()->ignore($userId)
+
+
+17. ADMIN MANAGEMENT LOGIC
+==========================
+
+Used Logic:
+- Admin can create another admin.
+- Admin login uses contact number and password.
+- Admin profile stores age and contact number.
+- Logged-in admin cannot delete themselves.
+- Password is hashed by User model casts.
+
+File References:
+- app/Http/Controllers/AdminManagementController.php
+- app/Http/Requests/AdminProfileRequest.php
+- app/Models/AdminProfile.php
+- resources/views/admins/index.blade.php
+
+Important Code/Concepts:
+- DB::transaction()
+- role = admin
+- status = approved
+- approved_at = now()
+- auth()->id() === $admin->id
+
+
+18. ELECTION MANAGEMENT LOGIC
+=============================
+
+Used Logic:
+- Admin can create election/election card.
+- Election name must be unique.
+- Election name must contain alphabets and spaces.
+- Election setting is created automatically for new election.
+- Hard delete removes related election data such as users relation, audit logs,
+  deleted candidates, archives, election settings, and election record.
+
+File References:
+- app/Http/Controllers/ElectionController.php
+- app/Models/Election.php
+- app/Models/ElectionSetting.php
+- resources/views/elections/create.blade.php
+
+Important Code/Concepts:
+- unique:elections,name
+- ElectionSetting::firstOrCreate()
+- DB::transaction()
+- hardDelete()
+
+
+19. ELECTION ARCHIVE AND RESTORE ALGORITHM
+==========================================
+
+Used Logic:
+- When election is deleted or restarted, old data is archived.
+- Archive stores election name, election title, reason, candidate count,
+  total votes, started/ended time, winners, and position results.
+- Candidate deletion history is stored separately.
+- Restore recreates election and candidates.
+- Restored election starts with vote count 0.
+- If restored candidate email already exists, a new email is generated.
+
+File References:
+- app/Http/Controllers/DashboardController.php
+- app/Models/ElectionArchive.php
+- app/Models/DeletedCandidate.php
+- database/migrations/2026_05_15_000000_upgrade_election_lifecycle_and_archives.php
+- resources/views/dashboard/index.blade.php
+
+Important Code/Concepts:
+- archiveElection()
+- restoreElection()
+- resetElectionData()
+- resolveRestoredCandidateEmail()
+- winners JSON
+- position_results JSON
+
+
+20. REPORT GENERATION LOGIC
+===========================
+
+Used Logic:
+- Admin can export reports in PDF or Excel format.
+- Report type and format are validated.
+- Election filter can be all elections or one selected election.
+- Election results report includes election votes, candidate votes, winners.
+- Voter list report includes approved, pending, rejected voters.
+- Candidate report includes candidate profile and ranking/comparison.
+- Audit log report includes action history.
+- Election summary report includes active/completed election count and participation.
+
+File References:
+- app/Http/Controllers/Reports/ReportController.php
+- app/Support/Reports/PdfReportExporter.php
+- app/Support/Reports/ExcelReportExporter.php
+- resources/views/reports/index.blade.php
+
+Important Code/Concepts:
+- export()
+- match ($type)
+- buildElectionResultsReport()
+- buildVoterListReport()
+- buildCandidateReport()
+- buildAuditLogReport()
+- buildElectionSummaryReport()
+- PdfReportExporter
+- ExcelReportExporter
+
+
+21. TURNOUT / PARTICIPATION CALCULATION ALGORITHM
+=================================================
+
+Used Logic:
+- Each approved voter can cast two votes: President and Vice President.
+- Total possible votes = approved voters * 2.
+- Turnout percentage = votes cast / total possible votes * 100.
+- If approved voters are 0, turnout is 0 to avoid division by zero.
+
+File References:
+- app/Http/Controllers/Reports/ReportController.php
+
+Formula:
+- turnout = round((votesCast / max(approvedVoters * 2, 1)) * 100, 2)
+
+
+22. AUDIT LOGIC
+===============
+
+Used Logic:
+- AuditLog model and audit_logs table are available.
+- AuditLogger records user, election, action, description, IP address,
+  user agent, metadata, and logged_at time.
+- In current code, AuditLogger is actively called when report is exported.
+- Other actions have audit structure available but are not widely logged yet.
+
+File References:
+- app/Support/Audit/AuditLogger.php
+- app/Models/AuditLog.php
+- app/Http/Controllers/Reports/ReportController.php
+- database/migrations/2026_05_21_000001_create_audit_logs_table.php
+
+Important Code/Concepts:
+- AuditLogger::record()
+- report_exported
+- ip_address
+- user_agent
+- metadata
+- logged_at
+
+
+23. DATABASE CONSTRAINTS AND RELATIONSHIP SECURITY
+==================================================
+
+Used Logic:
+- Contact number unique.
+- Voter ID unique.
+- Citizenship number unique.
+- Election name unique.
+- Candidate email unique.
+- Votes are connected to user, election, and candidate.
+- Deleting related records can cascade according to migration.
+- votes table has unique user-position constraint.
+
+File References:
+- database/migrations/0001_01_01_000000_create_users_table.php
+- database/migrations/2026_05_11_115751_create_elections_table.php
+- database/migrations/2026_05_11_115752_create_candidates_table.php
+- database/migrations/2026_05_11_115754_create_votes_table.php
+- database/migrations/2026_05_12_090000_update_votes_for_multi_position_ballot.php
+- database/migrations/2026_05_22_000001_add_unique_index_to_users_citizenship_number.php
+
+Important Code/Concepts:
+- unique()
+- foreignId()->constrained()
+- cascadeOnDelete()
+- nullOnDelete()
+- unique(['user_id', 'position'])
+
+
+24. FRONTEND SECURITY FEATURES
+==============================
+
+Used Logic:
+- CSRF token is used in forms.
+- Password fields are hidden by default.
+- Password show/hide is user controlled.
+- Frontend validation helps users enter correct data.
+- Browser confirm is used before delete/restore actions.
+- Authenticated layout separates admin and voter navigation.
+- Blade escaping helps protect normal output from XSS.
+
+File References:
+- resources/views/layouts/app.blade.php
+- resources/views/auth/login.blade.php
+- resources/views/auth/register.blade.php
+- resources/views/voting/index.blade.php
+- resources/views/dashboard/index.blade.php
+- resources/views/admins/index.blade.php
+- resources/views/candidates/index.blade.php
+- resources/views/elections/create.blade.php
+- resources/views/partials/alerts.blade.php
+
+Important Code/Concepts:
+- @csrf
+- @method('DELETE')
+- @method('PUT')
+- confirm()
+- HTML validation attributes
+- minlength
+- maxlength
+- accept
+- {{ }} Blade escaping
+
+
+25. BACKEND SECURITY FEATURES
+=============================
+
+Used Logic:
+- Laravel authentication.
+- Password hashing.
+- Session regeneration after login.
+- Session invalidation on logout.
+- CSRF protection.
+- Role based middleware.
+- Approved-user middleware.
+- Server-side validation.
+- Database unique constraints.
+- DB transaction for vote casting.
+- Candidate election validation before vote.
+- Candidate position validation before vote.
+- File upload type and size validation.
+
+File References:
+- app/Http/Controllers/AuthController.php
+- app/Http/Controllers/VoteController.php
+- app/Http/Middleware/EnsureUserIsAdmin.php
+- app/Http/Middleware/EnsureUserIsApproved.php
+- app/Http/Requests/*
+- app/Models/User.php
+- routes/web.php
+- bootstrap/app.php
+- database/migrations/*
+
+
+26. FRONTEND LOGIC SUMMARY
+==========================
+
+Main Frontend Logic Used:
+- Password show/hide toggle.
+- Registration password confirmation check.
+- Ballot summary update after selecting candidate.
+- Vote button disabled after voting.
+- Election status display: active, paused, ended, pending.
+- Countdown timer.
+- Auto reload after election end.
+- Dashboard election filtering.
+- Chart.js vote visualization.
+- Delete/restore confirmation.
+- Alert display for validation/status messages.
+
+Main Frontend Files:
+- resources/views/layouts/app.blade.php
+- resources/views/auth/login.blade.php
+- resources/views/auth/register.blade.php
+- resources/views/voting/index.blade.php
+- resources/views/dashboard/index.blade.php
+- resources/views/candidates/index.blade.php
+- resources/views/candidates/form.blade.php
+- resources/views/users/index.blade.php
+- resources/views/admins/index.blade.php
+- resources/views/pending-users/index.blade.php
+- resources/views/reports/index.blade.php
+- public/css/online-voting-system.css
+
+
+27. BACKEND LOGIC SUMMARY
+=========================
+
+Main Backend Logic Used:
+- Login/register/logout.
+- Password hashing.
+- Admin/voter authorization.
+- Pending user approval/rejection.
+- Candidate CRUD.
+- User CRUD.
+- Admin CRUD.
+- Election/election card CRUD.
+- Election start/pause/resume/end.
+- Vote validation and vote insert.
+- One-voter rule.
+- Election-wise voting.
+- Position-wise voting.
+- Winner and tie calculation.
+- Election archive and restore.
+- Report generation.
+- Audit log for report export.
+- Database relationship management.
+
+Main Backend Files:
+- routes/web.php
+- app/Http/Controllers/AuthController.php
+- app/Http/Controllers/VoteController.php
+- app/Http/Controllers/DashboardController.php
+- app/Http/Controllers/CandidateController.php
+- app/Http/Controllers/UserManagementController.php
+- app/Http/Controllers/AdminManagementController.php
+- app/Http/Controllers/PendingUserController.php
+- app/Http/Controllers/ElectionController.php
+- app/Http/Controllers/Reports/ReportController.php
+- app/Http/Middleware/EnsureUserIsAdmin.php
+- app/Http/Middleware/EnsureUserIsApproved.php
+- app/Http/Requests/LoginRequest.php
+- app/Http/Requests/RegisterUserRequest.php
+- app/Http/Requests/CandidateRequest.php
+- app/Http/Requests/AdminProfileRequest.php
+- app/Http/Requests/UserUpdateRequest.php
+- app/Http/Requests/PendingUserActionRequest.php
+- app/Models/User.php
+- app/Models/Candidate.php
+- app/Models/Election.php
+- app/Models/Vote.php
+- app/Models/ElectionSetting.php
+- app/Models/ElectionArchive.php
+- app/Models/DeletedCandidate.php
+- app/Models/AuditLog.php
+- app/Support/Audit/AuditLogger.php
+- app/Support/Reports/PdfReportExporter.php
+- app/Support/Reports/ExcelReportExporter.php
+
+
+28. VIVA / REPORT PRESENTATION SUMMARY
+======================================
+
+You can explain the algorithms like this:
+
+This Online Voting System uses application-level algorithms for secure voting
+workflow. The authentication algorithm verifies contact number and password.
+The authorization algorithm separates admin and voter
+access using middleware. The voting algorithm validates election status,
+candidate election, candidate position, and duplicate voting before storing
+votes inside a database transaction. The winner calculation algorithm counts
+votes position-wise and detects tie cases. The election lifecycle algorithm
+handles start, pause, resume, end, archive, and restore operations. The reporting
+algorithm aggregates election-wise votes, candidate votes, turnout percentage,
+voter status, and election summary into PDF or Excel reports.
+
+
+29. PROJECT WEIGHT POINTS FOR BCA FINAL YEAR
+============================================
+
+Strong Features:
+- Laravel full-stack project.
+- Admin and voter role based access.
+- Voter registration with admin approval.
+- Contact number and password authentication.
+- Election-wise voting.
+- One person, one ballot logic.
+- President and Vice President position-wise voting.
+- Election start, pause, resume, and end lifecycle.
+- Winner and tie calculation.
+- Dashboard charts.
+- PDF/Excel reports.
+- Election archive and restore.
+- Database constraints and relationships.
+- Validation and middleware security.
+
+Limitations:
+- Vote is not fully anonymous because votes are linked with user_id.
+- No OTP/email verification in current implementation.
+- No blockchain or advanced cryptographic vote encryption.
+- Audit logging is currently limited mainly to report export.
+
+Recommended Claim:
+This is a secure academic online voting management system with authentication,
+role-based access, election-wise voting, vote validation, result calculation,
+election lifecycle management, reporting, and archive/restore features.
