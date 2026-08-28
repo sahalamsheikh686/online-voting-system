@@ -1,4 +1,4 @@
-# Use official PHP CLI image for Laravel's built-in HTTP server on Render.
+# Use official PHP CLI image for Laravel's built-in HTTP server.
 FROM php:8.2-cli
 
 WORKDIR /var/www/html

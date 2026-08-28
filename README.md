@@ -16,30 +16,40 @@ This project ensures:
 - Real-time results after polls close  
 - Secure authentication for Admin, Host, and Voter, with email OTP verification
 
-## Deploying on Render
-This repo includes a Docker-based `render.yaml` Blueprint for Render.
+## Deploying on Railway
+This repo includes a Docker-based `railway.json` config, and the app is Docker-ready out of the box.
 
 1. Push the project to GitHub.
-2. In Render, create a new Blueprint from the repo.
-3. Render creates a web service and Postgres database, then injects `DB_URL`.
-4. The container runs migrations at startup and binds to Render's `$PORT`.
+2. In Railway, create a new project from this repo (Railway auto-detects the `Dockerfile`).
+3. Add a Postgres database to the project (Railway → New → Database → PostgreSQL). Railway injects `DATABASE_URL` into the web service automatically.
+4. Set the environment variables below on the web service.
+5. The container runs migrations at startup and binds to Railway's `$PORT` automatically.
 
-For a manual Render web service, use Docker and set these environment variables:
+Set these environment variables on the Railway service:
 
 ```env
+APP_NAME=Online Voting System
 APP_ENV=production
 APP_DEBUG=false
+APP_KEY=<output of: php artisan key:generate --show>
 DB_CONNECTION=pgsql
-DB_URL=<your Render Postgres internal connection string>
 SESSION_DRIVER=database
 CACHE_STORE=database
 QUEUE_CONNECTION=database
 ```
 
-Set `APP_KEY` to the output of:
+`DATABASE_URL` does not need to be set manually — Railway's Postgres plugin injects it automatically, and `config/database.php` reads it out of the box.
 
-```bash
-php artisan key:generate --show
+To send real emails (OTP verification, rejection notices, password reset), also set:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=<smtp host>
+MAIL_PORT=587
+MAIL_USERNAME=<smtp username>
+MAIL_PASSWORD=<smtp password>
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=<from address>
 ```
 
 On first deploy, the startup script creates a default admin if one does not exist:
@@ -50,7 +60,7 @@ Password: admin12345
 ```
 
 You can override these with `DEFAULT_ADMIN_CONTACT` and `DEFAULT_ADMIN_PASSWORD`
-in Render.
+in Railway's environment variables.
 
 ## License
 This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
