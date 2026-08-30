@@ -11,7 +11,6 @@ class Candidate extends Model
     protected $fillable = [
         'election_id',
         'name',
-        'party',
         'age',
         'position',
         'image_path',

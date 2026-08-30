@@ -12,7 +12,6 @@ class DeletedCandidate extends Model
         'original_candidate_id',
         'election_name',
         'candidate_name',
-        'party',
         'age',
         'position',
         'email',

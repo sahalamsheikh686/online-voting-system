@@ -118,7 +118,6 @@ class ReportController extends Controller
                     $this->electionLabel($election),
                     $electionTitle,
                     $candidate->name,
-                    $candidate->party ?: 'Independent',
                     $candidate->position,
                     $candidate->votes->count(),
                 ];
@@ -171,7 +170,7 @@ class ReportController extends Controller
                 ],
                 [
                     'title' => 'Candidate Wise Total Votes',
-                    'headers' => ['Election', 'Election Title', 'Candidate', 'Party', 'Position', 'Votes'],
+                    'headers' => ['Election', 'Election Title', 'Candidate', 'Position', 'Votes'],
                     'rows' => $candidateRows,
                 ],
                 [
@@ -264,7 +263,6 @@ class ReportController extends Controller
         $candidateRows = $candidates
             ->map(fn (Candidate $candidate) => [
                 $candidate->name,
-                $candidate->party ?: 'Independent',
                 $this->electionLabel($candidate->election) ?? 'Unknown Election',
                 $this->electionTitleForElection($candidate->election),
                 $candidate->position,
@@ -282,7 +280,6 @@ class ReportController extends Controller
                 $candidate->name,
                 $this->electionLabel($candidate->election) ?? 'Unknown Election',
                 $this->electionTitleForElection($candidate->election),
-                $candidate->party ?: 'Independent',
                 $candidate->votes->count(),
             ])
             ->all();
@@ -300,19 +297,17 @@ class ReportController extends Controller
             'sections' => [
                 [
                     'title' => 'Candidate Profiles',
-                    'headers' => ['Name', 'Party', 'Election', 'Election Title', 'Position', 'Contact Email', 'Votes'],
+                    'headers' => ['Name', 'Election', 'Election Title', 'Position', 'Contact Email', 'Votes'],
                     'rows' => $candidateRows,
                 ],
                 [
                     'title' => 'Candidate Comparison Table',
                     'description' => 'This table can be opened in Excel for side-by-side vote comparison.',
-                    'headers' => ['Rank', 'Candidate', 'Election', 'Election Title', 'Party', 'Votes'],
+                    'headers' => ['Rank', 'Candidate', 'Election', 'Election Title', 'Votes'],
                     'rows' => $comparisonRows,
                 ],
             ],
-            'notes' => [
-                'Candidates without a party value are marked as Independent in the export.',
-            ],
+            'notes' => [],
         ];
     }
 

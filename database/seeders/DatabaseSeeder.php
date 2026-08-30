@@ -9,7 +9,6 @@ use App\Models\ElectionSetting;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -56,8 +55,6 @@ class DatabaseSeeder extends Seeder
             3 => 'Vice President',
             4 => 'Vice President',
         ];
-        $parties = ['Unity Party', 'Forward Nepal', 'Citizen Forum', 'Independent'];
-
         foreach ($elections as $index => $election) {
             foreach (range(1, 4) as $candidateNumber) {
                 Candidate::updateOrCreate(
@@ -67,7 +64,6 @@ class DatabaseSeeder extends Seeder
                     ],
                     [
                         'name' => fake()->unique()->firstName().' '.$election->name,
-                        'party' => Arr::random($parties),
                         'age' => fake()->numberBetween(35, 68),
                         'position' => $positions[$candidateNumber],
                         'is_active' => true,

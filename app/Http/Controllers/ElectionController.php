@@ -24,13 +24,14 @@ class ElectionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'not_regex:/^\s+$/'],
-            'election_title' => ['required', 'string', 'max:120', 'regex:/^[\pL\pN ]+$/u'],
+            'name' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z\s]+$/'],
+            'election_title' => ['required', 'string', 'max:120', 'regex:/^[\pL\pN ]+$/u', 'not_regex:/^[\pN\s]+$/u'],
             'place_name' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9\s]+$/', 'not_regex:/^\d+$/'],
         ], [
-            'name.not_regex' => 'Election name must contain text.',
+            'name.regex' => 'Election name must contain only alphabet characters and spaces.',
             'election_title.required' => 'Please enter the election title.',
             'election_title.regex' => 'Election title can contain only letters, numbers, and spaces.',
+            'election_title.not_regex' => 'Election title cannot be numbers only.',
             'place_name.required' => 'Please enter the election place.',
             'place_name.regex' => 'Election place can contain only letters, numbers, and spaces.',
             'place_name.not_regex' => 'Election place cannot be numbers only.',

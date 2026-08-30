@@ -28,7 +28,6 @@ class CandidateRequest extends FormRequest
 
         return [
             'name' => ['required', 'regex:/^[A-Za-z\s]+$/', 'max:255'],
-            'party' => ['nullable', 'regex:/^[A-Za-z0-9\s\.\-&]+$/', 'max:255'],
             'age' => ['required', 'integer', 'min:18', 'max:120'],
             'image' => [$candidateId ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'vision' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:4096'],
@@ -58,7 +57,6 @@ class CandidateRequest extends FormRequest
     {
         return [
             'name.regex' => 'Candidate name must contain only alphabet characters and spaces.',
-            'party.regex' => 'Party name can contain letters, numbers, spaces, dot, dash, and ampersand only.',
             'age.integer' => 'Candidate age must contain only numbers.',
             'image.mimes' => 'Candidate image must be jpg, jpeg, or png.',
             'vision.mimes' => 'Candidate vision must be an image, PDF, or Word file.',

@@ -174,12 +174,13 @@ class DashboardController extends Controller
         $this->authorizeElectionAccess($election);
 
         $validated = request()->validate([
-            'election_title' => ['required', 'string', 'max:120', 'regex:/^[\pL\pN ]+$/u'],
+            'election_title' => ['required', 'string', 'max:120', 'regex:/^[\pL\pN ]+$/u', 'not_regex:/^[\pN\s]+$/u'],
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['required', 'date', 'after:now'],
         ], [
             'election_title.required' => 'Please enter the election title.',
             'election_title.regex' => 'Election title can contain only letters, numbers, and spaces.',
+            'election_title.not_regex' => 'Election title cannot be numbers only.',
             'ends_at.required' => 'Please choose the election end time.',
             'ends_at.after' => 'Election end time must be in the future.',
         ]);
