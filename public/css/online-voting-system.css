@@ -178,12 +178,18 @@ body {
     max-width: 62ch;
 }
 
+.app-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
 .app-account-box {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-left: auto;
     min-width: 260px;
     max-width: min(100%, 420px);
     padding: 0.9rem 1rem;
@@ -191,6 +197,44 @@ body {
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(15, 23, 42, 0.08);
     box-shadow: 0 12px 30px rgba(31, 41, 55, 0.08);
+}
+
+.app-notification-bell {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 12px 30px rgba(31, 41, 55, 0.08);
+    color: var(--text-main);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.app-notification-bell:hover {
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.app-notification-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 0 0 2px #fff;
 }
 
 .app-account-meta {

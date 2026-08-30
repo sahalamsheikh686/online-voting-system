@@ -86,7 +86,10 @@
                                         : 'Review the latest election updates and cast your vote securely from this portal.'))
                             </div>
                         </div>
-                        @include('partials.navbar.account')
+                        <div class="app-topbar-actions">
+                            @include('partials.navbar.notifications')
+                            @include('partials.navbar.account')
+                        </div>
                     </div>
                     @include('partials.alerts')
                     @yield('content')
