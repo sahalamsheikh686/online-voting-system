@@ -342,12 +342,14 @@
                                         <div>
                                             <div class="fw-semibold">{{ $positionChart['position'] }}</div>
                                             <div class="text-secondary small">
-                                                @if($chart['has_ended'] && $positionChart['is_tie'])
+                                                @if(! $chart['has_ended'])
+                                                    Result pending
+                                                @elseif($positionChart['is_tie'])
                                                     Draw: {{ implode(', ', $positionChart['tied_candidates']) }}
-                                                @elseif($chart['has_ended'] && $positionChart['winner'])
+                                                @elseif($positionChart['winner'])
                                                     Winner: {{ $positionChart['winner']['name'] }}
                                                 @else
-                                                    Leader: {{ $positionChart['leader'] }}
+                                                    No winner yet
                                                 @endif
                                             </div>
                                         </div>
